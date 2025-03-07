@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id       String    @id @default(cuid())
+  username String
+  password String
+  email    String    @unique
+  endereco Endereco?
+  telefone Contato?
+
+  @@map("usuarios")
+}
+
+model Endereco {
+  id        String  @id @default(cuid())
+  rua       String
+  cep       String
+  bairro    String
+  estado    String
+  cidade    String
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+  usuarioId String  @unique
+
+  @@map("enderecos")
+}
+
+model Contato {
+  id        String  @id @default(cuid())
+  telefone  String  @unique
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+  usuarioId String  @unique
+
+  @@map("contatos")
+}
