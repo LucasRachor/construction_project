@@ -1,35 +1,60 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaClient } from '@prisma/client';
+import { error } from 'console';
+import { MESSAGES } from '@nestjs/core/constants';
+import { Http2ServerResponse } from 'http2';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaClient) {}
-  
-  async create(createUserDto: CreateUserDto) {
-    return await this.prisma.usuario.create({
-      data: {
-        username: createUserDto.username,
-        email: createUserDto.email,
-        password: createUserDto.password,
-        telefone: {
-          create: {
-            telefone: createUserDto.contato.telefone
-          }
-        },
-        endereco: {
-          create: {
-            rua: createUserDto.endereco.rua,
-            bairro: createUserDto.endereco.bairro,
-            cep: createUserDto.endereco.cep,
-            cidade: createUserDto.endereco.cidade,
-            estado: createUserDto.endereco.estado
-          }
-        }
+  constructor(private readonly prisma: PrismaClient) { }
 
+  async findByUsername(username: string) {
+    return await this.prisma.usuario.findUnique({
+      where: { username }
+    })
+  }
+
+  async create(createUserDto: CreateUserDto) {
+    try {
+      const userExist = await this.findByUsername(createUserDto.username)
+      if (userExist) {
+        throw new HttpException("Usuario já cadastrado! ", HttpStatus.BAD_REQUEST)
       }
-    });
+      console.log("estou funcionando 2")
+      return await this.prisma.usuario.create({
+        data: {
+          username: createUserDto.username,
+          email: createUserDto.email,
+          password: createUserDto.password,
+          telefone: {
+            create: {
+              telefone: createUserDto.contato.telefone
+            }
+          },
+          endereco: {
+            create: {
+              rua: createUserDto.endereco.rua,
+              bairro: createUserDto.endereco.bairro,
+              cep: createUserDto.endereco.cep,
+              cidade: createUserDto.endereco.cidade,
+              estado: createUserDto.endereco.estado
+            }
+          }
+
+        }
+      });
+
+      // corrigir retorno de erros!
+    } catch (error) {
+      if (error instanceof HttpException) {
+        console.log(error)
+        return "n faça nada"
+      }
+      throw new HttpException("teste", HttpStatus.BAD_REQUEST)
+    }
+
   }
 
   async findAll() {
@@ -53,10 +78,6 @@ export class UserService {
         }
       }
     });
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
