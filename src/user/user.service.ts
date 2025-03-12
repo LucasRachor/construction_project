@@ -22,7 +22,7 @@ export class UserService {
       if (userExist) {
         throw new HttpException("Usuario já cadastrado! ", HttpStatus.BAD_REQUEST)
       }
-      console.log("estou funcionando 2")
+      console.log("estou funcionando")
       return await this.prisma.usuario.create({
         data: {
           username: createUserDto.username,
@@ -46,13 +46,11 @@ export class UserService {
         }
       });
 
-      // corrigir retorno de erros!
     } catch (error) {
       if (error instanceof HttpException) {
-        console.log(error)
-        return "n faça nada"
+        return JSON.stringify(error.message);
       }
-      throw new HttpException("teste", HttpStatus.BAD_REQUEST)
+      throw new HttpException("Erro interno do servidor", HttpStatus.INTERNAL_SERVER_ERROR)
     }
 
   }

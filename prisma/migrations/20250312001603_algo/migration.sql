@@ -27,6 +27,9 @@ CREATE TABLE "contatos" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "usuarios_username_key" ON "usuarios"("username");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "usuarios_email_key" ON "usuarios"("email");
 
 -- CreateIndex
