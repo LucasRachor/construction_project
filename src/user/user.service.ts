@@ -2,28 +2,48 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaClient } from '@prisma/client';
-import { error } from 'console';
-import { MESSAGES } from '@nestjs/core/constants';
-import { Http2ServerResponse } from 'http2';
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaClient) { }
 
-  async findByUsername(username: string) {
-    return await this.prisma.usuario.findUnique({
-      where: { username }
+  async validateUser(createUserDto: CreateUserDto) {
+    // validação do username
+    const userExist = await this.prisma.usuario.findUnique({
+      where: {
+        username: createUserDto.username
+      }
     })
+    if (userExist) {
+      throw new HttpException("Usuario já cadastrado!", HttpStatus.BAD_REQUEST)
+    }
+
+    // validação do email
+    const emailExist = await this.prisma.usuario.findUnique({
+      where: {
+        email: createUserDto.email
+      }
+    })
+    if (emailExist) {
+      throw new HttpException("Email já cadastrado!", HttpStatus.BAD_REQUEST)
+    }
+
+    // validacao do telefone
+    const phoneExist = await this.prisma.contato.findUnique({
+      where: {
+        telefone: createUserDto.contato.telefone
+      }
+    })
+    if (phoneExist) {
+      throw new HttpException("Telefone já cadastrado!", HttpStatus.BAD_REQUEST)
+    }
+
   }
 
   async create(createUserDto: CreateUserDto) {
     try {
-      const userExist = await this.findByUsername(createUserDto.username)
-      if (userExist) {
-        throw new HttpException("Usuario já cadastrado! ", HttpStatus.BAD_REQUEST)
-      }
-      console.log("estou funcionando")
-      return await this.prisma.usuario.create({
+      await this.validateUser(createUserDto)
+      await this.prisma.usuario.create({
         data: {
           username: createUserDto.username,
           email: createUserDto.email,
@@ -42,14 +62,15 @@ export class UserService {
               estado: createUserDto.endereco.estado
             }
           }
-
         }
       });
+      return undefined;
 
     } catch (error) {
       if (error instanceof HttpException) {
-        return JSON.stringify(error.message);
+        throw error;
       }
+      console.log(error)
       throw new HttpException("Erro interno do servidor", HttpStatus.INTERNAL_SERVER_ERROR)
     }
 
