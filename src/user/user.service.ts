@@ -1,48 +1,73 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaClient) { }
 
-  async validateUser(createUserDto: CreateUserDto) {
-    // validação do username
-    const userExist = await this.prisma.usuario.findUnique({
+  async validateUsername(username: string) {
+    const user = await this.prisma.usuario.findUnique({
       where: {
-        username: createUserDto.username
+        username: username
       }
     })
-    if (userExist) {
-      throw new HttpException("Usuario já cadastrado!", HttpStatus.BAD_REQUEST)
+    if (user) {
+      return true;
+    } else {
+      return false;
     }
+  }
 
-    // validação do email
+  async validateEmail(email: string) {
     const emailExist = await this.prisma.usuario.findUnique({
       where: {
-        email: createUserDto.email
+        email: email
       }
     })
     if (emailExist) {
-      throw new HttpException("Email já cadastrado!", HttpStatus.BAD_REQUEST)
+      return true;
+    } else {
+      return false;
     }
+  }
 
-    // validacao do telefone
+  async validatePhone(phone: string) {
     const phoneExist = await this.prisma.contato.findUnique({
       where: {
-        telefone: createUserDto.contato.telefone
+        telefone: phone
       }
     })
     if (phoneExist) {
-      throw new HttpException("Telefone já cadastrado!", HttpStatus.BAD_REQUEST)
+      return true;
+    } else {
+      return false;
     }
+  }
+
+  private validators = {
+    username: this.validateUsername.bind(this),
+    email: this.validateEmail.bind(this),
+    telefone: this.validatePhone.bind(this)
+  }
+
+  async validate(params: Record<string, string>) {
+    const results: Record<string, boolean> = {};
+
+    await Promise.all(
+      Object.entries(params).map(async ([key, value]) => {
+        if (this.validators[key]) {
+          console.log(this.validators)
+          results[key] = await this.validators[key](value);
+        }
+      })
+    )
+    return results;
 
   }
 
   async create(createUserDto: CreateUserDto) {
     try {
-      await this.validateUser(createUserDto)
       await this.prisma.usuario.create({
         data: {
           username: createUserDto.username,
@@ -99,11 +124,4 @@ export class UserService {
     });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
-  }
 }
