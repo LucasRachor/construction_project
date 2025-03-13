@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, HttpException, HttpStatus } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ApiQuery } from '@nestjs/swagger';
 
 @Controller('/api/v1/users')
 export class UserController {
@@ -16,18 +17,19 @@ export class UserController {
     return await this.userService.findAll();
   }
 
+  @ApiQuery({ name: 'username', required: false, })
+  @ApiQuery({ name: 'email', required: false, })
+  @ApiQuery({ name: 'telefone', required: false, })
   @Get('/validate')
   async validateUser(
-    @Query('username') username?: string,
-    @Query('email') email?: string,
-    @Query('telefone') telefone?: string
+    @Query('username') username: string,
+    @Query('email') email: string,
+    @Query('telefone') telefone: string
   ) {
     if (!username && !email && !telefone) {
       throw new HttpException('É necessário fornecer pelo menos um parâmetro (username, email ou telefone)',
         HttpStatus.BAD_REQUEST);
     }
-
-
     return this.userService.validate({ username, email, telefone })
   }
 }

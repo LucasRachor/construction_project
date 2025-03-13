@@ -7,42 +7,41 @@ export class UserService {
   constructor(private readonly prisma: PrismaClient) { }
 
   async validateUsername(username: string) {
-    const user = await this.prisma.usuario.findUnique({
+    if (!username) {
+      return "Não informado";
+    }
+    const userExist = await this.prisma.usuario.findUnique({
       where: {
         username: username
       }
     })
-    if (user) {
-      return true;
-    } else {
-      return false;
-    }
+
+    return !!userExist;
   }
 
   async validateEmail(email: string) {
+    if (!email) {
+      return "Não informado";
+    }
     const emailExist = await this.prisma.usuario.findUnique({
       where: {
         email: email
       }
     })
-    if (emailExist) {
-      return true;
-    } else {
-      return false;
-    }
+
+    return !!emailExist;
   }
 
-  async validatePhone(phone: string) {
+  async validatePhone(phone?: string) {
+    if (!phone) {
+      return "Não informado"
+    };
+  
     const phoneExist = await this.prisma.contato.findUnique({
-      where: {
-        telefone: phone
-      }
-    })
-    if (phoneExist) {
-      return true;
-    } else {
-      return false;
-    }
+      where: { telefone: phone }
+    });
+  
+    return !!phoneExist;
   }
 
   private validators = {
@@ -51,19 +50,17 @@ export class UserService {
     telefone: this.validatePhone.bind(this)
   }
 
-  async validate(params: Record<string, string>) {
+  async validate(params: Partial<{ username: string; email: string; telefone: string }>) {
     const results: Record<string, boolean> = {};
 
     await Promise.all(
       Object.entries(params).map(async ([key, value]) => {
         if (this.validators[key]) {
-          console.log(this.validators)
           results[key] = await this.validators[key](value);
         }
       })
-    )
+    );
     return results;
-
   }
 
   async create(createUserDto: CreateUserDto) {
