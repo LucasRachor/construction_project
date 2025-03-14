@@ -6,7 +6,6 @@ export class CreateUserDto {
     @IsString()
     @IsNotEmpty()
     @ApiProperty()
-    @ApiPropertyOptional()
     username: string
 
     @IsString()
@@ -14,22 +13,18 @@ export class CreateUserDto {
     @MaxLength(16)
     @IsNotEmpty()
     @ApiProperty()
-    @ApiPropertyOptional()
     password: string
 
     @IsEmail()
     @IsNotEmpty()
     @ApiProperty()
-    @ApiPropertyOptional()
     email: string
 
     @IsNotEmpty()
     @ApiProperty()
-    @ApiPropertyOptional()
     contato: Contato
 
     @IsNotEmpty()
     @ApiProperty()
-    @ApiPropertyOptional()
     endereco: Endereco
 }

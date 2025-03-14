@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,6 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// usuarios
 model Usuario {
   id       String    @id @default(cuid())
   username String    @unique
@@ -41,4 +39,48 @@ model Contato {
   usuarioId String  @unique
 
   @@map("contatos")
+}
+
+// produtos
+model Produto {
+  id              String            @id @default(cuid())
+  nome            String
+  descricao       String
+  preco           Int
+  estoque         Estoque[]
+  pedidosprodutos PedidosProdutos[]
+
+  @@map("produtos")
+}
+
+model Estoque {
+  id         String  @id @default(cuid())
+  produto    Produto @relation(fields: [produtoId], references: [id])
+  produtoId  String  @unique
+  quantidade Int
+  status String
+
+  @@map("estoque")
+}
+
+model Pedido {
+  id            String            @id @default(cuid())
+  dataCriacao   DateTime          @default(now())
+  precoTotal    Int
+  pagamento     String
+  status        String
+  pedidoproduto PedidosProdutos[]
+
+  @@map("pedidos")
+}
+
+model PedidosProdutos {
+  id         String  @id @default(cuid())
+  pedido     Pedido  @relation(fields: [pedidoId], references: [id])
+  pedidoId   String
+  produto    Produto @relation(fields: [produtoId], references: [id])
+  produtoId  String
+  quantidade Int
+
+  @@map("pedidos_produtos")
 }

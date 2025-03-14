@@ -17,6 +17,7 @@ export class UserController {
     return await this.userService.findAll();
   }
 
+  // configuracao do swagger
   @ApiQuery({ name: 'username', required: false, })
   @ApiQuery({ name: 'email', required: false, })
   @ApiQuery({ name: 'telefone', required: false, })
@@ -27,7 +28,8 @@ export class UserController {
     @Query('telefone') telefone: string
   ) {
     if (!username && !email && !telefone) {
-      throw new HttpException('É necessário fornecer pelo menos um parâmetro (username, email ou telefone)',
+      throw new HttpException(
+        'É necessário fornecer pelo menos um parâmetro (username, email ou telefone)',
         HttpStatus.BAD_REQUEST);
     }
     return this.userService.validate({ username, email, telefone })
